@@ -1,8 +1,7 @@
 let currentIndex = 0;
 let currentFilter = "all";
-let currentQuizIndex = 0;
-let currentQuizScore = 0;
-let currentQuizQuestions = [];
+let currentExamType = "listening";
+let currentExamModel = "H41001";
 
 const learnedWords = JSON.parse(localStorage.getItem("learnedWords") || "[]");
 const weakWords = JSON.parse(localStorage.getItem("weakWords") || "[]");
@@ -10,18 +9,11 @@ const weakWords = JSON.parse(localStorage.getItem("weakWords") || "[]");
 const pages = document.querySelectorAll(".page");
 const navButtons = document.querySelectorAll(".nav-btn");
 const filterButtons = document.querySelectorAll(".filter-btn");
-const writingTabs = document.querySelectorAll(".writing-tab");
+const examTypeButtons = document.querySelectorAll(".exam-type-btn");
+const examModelButtons = document.querySelectorAll(".exam-model-btn");
 
-const fcHanzi = document.getElementById("fcHanzi");
-const fcMeaning = document.getElementById("fcMeaning");
-const fcPinyin = document.getElementById("fcPinyin");
-const fcExample = document.getElementById("fcExample");
-
-const togglePinyinBtn = document.getElementById("togglePinyinBtn");
-const toggleExampleBtn = document.getElementById("toggleExampleBtn");
-const speakBtn = document.getElementById("speakBtn");
-const markLearnedBtn = document.getElementById("markLearnedBtn");
-const nextWordBtn = document.getElementById("nextWordBtn");
+const heroTotalWords = document.getElementById("heroTotalWords");
+const heroLearnedWords = document.getElementById("heroLearnedWords");
 
 const statTotal = document.getElementById("statTotal");
 const statLearned = document.getElementById("statLearned");
@@ -30,15 +22,31 @@ const statWeak = document.getElementById("statWeak");
 const progressFill = document.getElementById("progressFill");
 const progressText = document.getElementById("progressText");
 
-const wordsGrid = document.getElementById("wordsGrid");
+const goFlashcardsBtn = document.getElementById("goFlashcardsBtn");
+const goWordsBtn = document.getElementById("goWordsBtn");
+const goExamsBtn = document.getElementById("goExamsBtn");
+
+const fcHanzi = document.getElementById("fcHanzi");
+const fcMeaning = document.getElementById("fcMeaning");
+const fcPinyin = document.getElementById("fcPinyin");
+const fcExampleBox = document.getElementById("fcExampleBox");
+const fcExampleZh = document.getElementById("fcExampleZh");
+const fcExampleAr = document.getElementById("fcExampleAr");
+const flashcardOrder = document.getElementById("flashcardOrder");
+const flashcardState = document.getElementById("flashcardState");
+
+const togglePinyinBtn = document.getElementById("togglePinyinBtn");
+const toggleExampleBtn = document.getElementById("toggleExampleBtn");
+const speakWordBtn = document.getElementById("speakWordBtn");
+const speakExampleBtn = document.getElementById("speakExampleBtn");
+const markLearnedBtn = document.getElementById("markLearnedBtn");
+const prevWordBtn = document.getElementById("prevWordBtn");
+const nextWordBtn = document.getElementById("nextWordBtn");
+
 const searchInput = document.getElementById("searchInput");
+const wordsList = document.getElementById("wordsList");
 
-const startQuizBtn = document.getElementById("startQuizBtn");
-const quizQuestion = document.getElementById("quizQuestion");
-const quizOptions = document.getElementById("quizOptions");
-const quizScore = document.getElementById("quizScore");
-
-const writingContainer = document.getElementById("writingContainer");
+const examContent = document.getElementById("examContent");
 
 const resetDataBtn = document.getElementById("resetDataBtn");
 const exportDataBtn = document.getElementById("exportDataBtn");
@@ -49,49 +57,23 @@ function saveData() {
   localStorage.setItem("weakWords", JSON.stringify(weakWords));
 }
 
-function showPage(pageId) {
-  pages.forEach(page => page.classList.remove("active"));
-  const target = document.getElementById(pageId);
-  if (target) target.classList.add("active");
-
-  navButtons.forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.page === pageId);
-  });
+function isLearned(hanzi) {
+  return learnedWords.includes(hanzi);
 }
 
-navButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    showPage(btn.dataset.page);
-  });
-});
-
-function getCurrentWord() {
-  return WORDS[currentIndex];
-}
-
-function renderFlashcard() {
-  const word = getCurrentWord();
-  if (!word) return;
-
-  fcHanzi.textContent = word.hanzi;
-  fcMeaning.textContent = word.arabic;
-  fcPinyin.textContent = word.pinyin;
-  fcPinyin.style.display = "none";
-
-  fcExample.innerHTML = `
-    <strong>${word.exampleZh}</strong>
-    <br>
-    ${word.exampleAr}
-  `;
-  fcExample.style.display = "none";
+function isWeak(hanzi) {
+  return weakWords.includes(hanzi);
 }
 
 function updateStats() {
   const total = WORDS.length;
-  const learned = learnedWords.filter(word => WORDS.some(w => w.hanzi === word)).length;
-  const weak = weakWords.filter(word => WORDS.some(w => w.hanzi === word)).length;
+  const learned = learnedWords.filter((item) => WORDS.some((w) => w.hanzi === item)).length;
+  const weak = weakWords.filter((item) => WORDS.some((w) => w.hanzi === item)).length;
   const remaining = total - learned;
-  const percent = total === 0 ? 0 : Math.round((learned / total) * 100);
+  const percent = total ? Math.round((learned / total) * 100) : 0;
+
+  heroTotalWords.textContent = total;
+  heroLearnedWords.textContent = learned;
 
   statTotal.textContent = total;
   statLearned.textContent = learned;
@@ -101,40 +83,105 @@ function updateStats() {
   progressText.textContent = percent + "%";
 }
 
+function showPage(pageId) {
+  pages.forEach((page) => page.classList.remove("active"));
+  const target = document.getElementById(pageId);
+  if (target) target.classList.add("active");
+
+  navButtons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.page === pageId);
+  });
+}
+
+navButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    showPage(btn.dataset.page);
+  });
+});
+
+goFlashcardsBtn.addEventListener("click", () => showPage("flashcards"));
+goWordsBtn.addEventListener("click", () => showPage("words"));
+goExamsBtn.addEventListener("click", () => showPage("exams"));
+
+function currentWord() {
+  return WORDS[currentIndex];
+}
+
+function updateFlashcardState() {
+  const word = currentWord();
+  if (!word) return;
+
+  flashcardOrder.textContent = `#${currentIndex + 1}`;
+  flashcardState.textContent = isLearned(word.hanzi) ? "تعلمتها" : "جديدة";
+}
+
+function renderFlashcard() {
+  const word = currentWord();
+  if (!word) return;
+
+  fcHanzi.textContent = word.hanzi;
+  fcMeaning.textContent = word.arabic;
+  fcPinyin.textContent = word.pinyin;
+  fcPinyin.style.display = "none";
+
+  fcExampleZh.textContent = word.exampleZh;
+  fcExampleAr.textContent = word.exampleAr;
+  fcExampleBox.style.display = "none";
+
+  updateFlashcardState();
+  updateStats();
+}
+
 togglePinyinBtn.addEventListener("click", () => {
   fcPinyin.style.display = fcPinyin.style.display === "block" ? "none" : "block";
 });
 
 toggleExampleBtn.addEventListener("click", () => {
-  fcExample.style.display = fcExample.style.display === "block" ? "none" : "block";
+  fcExampleBox.style.display = fcExampleBox.style.display === "block" ? "none" : "block";
 });
 
-speakBtn.addEventListener("click", () => {
-  const word = getCurrentWord();
-  if (!word) return;
+function speakText(text, lang = "zh-CN") {
   if (!("speechSynthesis" in window)) {
     alert("الصوت غير مدعوم في هذا المتصفح");
     return;
   }
 
-  const utterance = new SpeechSynthesisUtterance(word.hanzi);
-  utterance.lang = "zh-CN";
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
+}
+
+speakWordBtn.addEventListener("click", () => {
+  const word = currentWord();
+  if (!word) return;
+  speakText(word.hanzi, "zh-CN");
+});
+
+speakExampleBtn.addEventListener("click", () => {
+  const word = currentWord();
+  if (!word) return;
+  speakText(word.exampleZh, "zh-CN");
 });
 
 markLearnedBtn.addEventListener("click", () => {
-  const word = getCurrentWord();
+  const word = currentWord();
   if (!word) return;
 
   if (!learnedWords.includes(word.hanzi)) {
     learnedWords.push(word.hanzi);
     saveData();
-    updateStats();
-    renderWordsGrid();
   }
 
+  updateStats();
+  renderWordsList();
+
   currentIndex = (currentIndex + 1) % WORDS.length;
+  renderFlashcard();
+});
+
+prevWordBtn.addEventListener("click", () => {
+  currentIndex = (currentIndex - 1 + WORDS.length) % WORDS.length;
   renderFlashcard();
 });
 
@@ -143,10 +190,10 @@ nextWordBtn.addEventListener("click", () => {
   renderFlashcard();
 });
 
-function renderWordsGrid() {
+function renderWordsList() {
   const searchValue = searchInput.value.trim().toLowerCase();
 
-  let filteredWords = WORDS.filter(word => {
+  const filteredWords = WORDS.filter((word) => {
     const matchesSearch =
       word.hanzi.toLowerCase().includes(searchValue) ||
       word.pinyin.toLowerCase().includes(searchValue) ||
@@ -154,207 +201,212 @@ function renderWordsGrid() {
 
     if (!matchesSearch) return false;
 
-    if (currentFilter === "learned") {
-      return learnedWords.includes(word.hanzi);
-    }
-
-    if (currentFilter === "unlearned") {
-      return !learnedWords.includes(word.hanzi);
-    }
-
-    if (currentFilter === "weak") {
-      return weakWords.includes(word.hanzi);
-    }
+    if (currentFilter === "learned") return isLearned(word.hanzi);
+    if (currentFilter === "unlearned") return !isLearned(word.hanzi);
+    if (currentFilter === "weak") return isWeak(word.hanzi);
 
     return true;
   });
 
-  wordsGrid.innerHTML = "";
+  wordsList.innerHTML = "";
 
   if (filteredWords.length === 0) {
-    wordsGrid.innerHTML = `<div class="muted">لا توجد نتائج</div>`;
+    wordsList.innerHTML = `<div class="muted">لا توجد نتائج</div>`;
     return;
   }
 
-  filteredWords.forEach(word => {
-    const card = document.createElement("div");
-    card.className = "word-card";
+  filteredWords.forEach((word) => {
+    const realIndex = WORDS.findIndex((item) => item.hanzi === word.hanzi);
 
-    if (learnedWords.includes(word.hanzi)) {
-      card.classList.add("learned");
+    const box = document.createElement("div");
+    box.className = "word-detail-card";
+    if (isLearned(word.hanzi)) {
+      box.classList.add("learned");
     }
 
-    card.innerHTML = `
-      <div class="word-hanzi">${word.hanzi}</div>
-      <div class="word-arabic">${word.arabic}</div>
-      <div class="word-pinyin">${word.pinyin}</div>
+    box.innerHTML = `
+      <div class="word-number-box">
+        <div class="word-number">#${realIndex + 1}</div>
+        <div class="word-hanzi-big">${word.hanzi}</div>
+      </div>
+
+      <div>
+        <div class="word-content-top">
+          <div class="word-main-info">
+            <h3>${word.hanzi}</h3>
+            <p class="word-pinyin">${word.pinyin}</p>
+            <p class="word-meaning">${word.arabic}</p>
+          </div>
+        </div>
+
+        <div class="word-example">
+          <div class="word-example-zh">${word.exampleZh}</div>
+          <div class="word-example-ar">${word.exampleAr}</div>
+        </div>
+
+        <div class="word-actions">
+          <button class="small-btn primary go-flash-btn">فتح في الفلاش كارد</button>
+          <button class="small-btn" data-speak-word>صوت الكلمة</button>
+          <button class="small-btn" data-speak-example>صوت الجملة</button>
+          <button class="small-btn success mark-learned-list-btn">تعلمتها</button>
+          <button class="small-btn warning mark-weak-btn">ضعيفة</button>
+        </div>
+      </div>
     `;
 
-    card.addEventListener("click", () => {
-      const index = WORDS.findIndex(item => item.hanzi === word.hanzi);
-      if (index !== -1) {
-        currentIndex = index;
+    box.querySelector(".go-flash-btn").addEventListener("click", () => {
+      currentIndex = realIndex;
+      renderFlashcard();
+      showPage("flashcards");
+    });
+
+    box.querySelector("[data-speak-word]").addEventListener("click", () => {
+      speakText(word.hanzi, "zh-CN");
+    });
+
+    box.querySelector("[data-speak-example]").addEventListener("click", () => {
+      speakText(word.exampleZh, "zh-CN");
+    });
+
+    box.querySelector(".mark-learned-list-btn").addEventListener("click", () => {
+      if (!learnedWords.includes(word.hanzi)) {
+        learnedWords.push(word.hanzi);
+        saveData();
+        updateStats();
+        renderWordsList();
         renderFlashcard();
-        showPage("flashcards");
       }
     });
 
-    wordsGrid.appendChild(card);
+    box.querySelector(".mark-weak-btn").addEventListener("click", () => {
+      if (!weakWords.includes(word.hanzi)) {
+        weakWords.push(word.hanzi);
+        saveData();
+        updateStats();
+        renderWordsList();
+      }
+    });
+
+    wordsList.appendChild(box);
   });
 }
 
-filterButtons.forEach(btn => {
+filterButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     currentFilter = btn.dataset.filter;
-
-    filterButtons.forEach(button => button.classList.remove("active"));
+    filterButtons.forEach((item) => item.classList.remove("active"));
     btn.classList.add("active");
-
-    renderWordsGrid();
+    renderWordsList();
   });
 });
 
-searchInput.addEventListener("input", renderWordsGrid);
+searchInput.addEventListener("input", renderWordsList);
 
-function shuffleArray(array) {
-  return [...array].sort(() => Math.random() - 0.5);
+function renderListeningExam(model) {
+  examContent.innerHTML = `
+    <div class="exam-placeholder">
+      <h3>${model} - Listening</h3>
+      <p>
+        ضع هنا لاحقًا روابط ملفات الاستماع وأسئلة كل نموذج.
+        الصفحة الآن مهيأة ومقسمة بشكل صحيح للاستماع.
+      </p>
+    </div>
+  `;
 }
 
-function buildQuizQuestions() {
-  const shuffled = shuffleArray(WORDS);
-  const selected = shuffled.slice(0, Math.min(10, WORDS.length));
-
-  return selected.map(word => {
-    const wrongOptions = shuffleArray(
-      WORDS.filter(item => item.hanzi !== word.hanzi)
-    )
-      .slice(0, 3)
-      .map(item => item.arabic);
-
-    const options = shuffleArray([word.arabic, ...wrongOptions]);
-
-    return {
-      hanzi: word.hanzi,
-      correctAnswer: word.arabic,
-      options
-    };
-  });
+function renderReadingExam(model) {
+  examContent.innerHTML = `
+    <div class="exam-placeholder">
+      <h3>${model} - Reading</h3>
+      <p>
+        ضع هنا لاحقًا أسئلة القراءة الكاملة لكل نموذج.
+        الصفحة الآن مهيأة ومقسمة بشكل صحيح للقراءة.
+      </p>
+    </div>
+  `;
 }
 
-function renderQuizQuestion() {
-  if (currentQuizQuestions.length === 0) {
-    quizQuestion.textContent = "اضغط ابدأ الكويز";
-    quizOptions.innerHTML = "";
-    quizScore.textContent = "0";
+function renderWritingExam(model) {
+  const items = WRITING_MODELS[model];
+
+  if (!items || items.length === 0) {
+    examContent.innerHTML = `
+      <div class="exam-placeholder">
+        <h3>${model} - Writing</h3>
+        <p>هذا النموذج غير مضاف بعد في الملف الحالي.</p>
+      </div>
+    `;
     return;
   }
 
-  if (currentQuizIndex >= currentQuizQuestions.length) {
-    quizQuestion.textContent = `انتهى الكويز - نتيجتك ${currentQuizScore} من ${currentQuizQuestions.length}`;
-    quizOptions.innerHTML = "";
-    return;
-  }
+  examContent.innerHTML = "";
 
-  const question = currentQuizQuestions[currentQuizIndex];
-  quizQuestion.textContent = `ما معنى: ${question.hanzi} ؟`;
-  quizOptions.innerHTML = "";
-
-  question.options.forEach(option => {
-    const btn = document.createElement("button");
-    btn.className = "quiz-option";
-    btn.textContent = option;
-
-    btn.addEventListener("click", () => {
-      const allOptions = quizOptions.querySelectorAll(".quiz-option");
-      allOptions.forEach(item => item.disabled = true);
-
-      if (option === question.correctAnswer) {
-        btn.classList.add("correct");
-        currentQuizScore++;
-      } else {
-        btn.classList.add("wrong");
-
-        const wrongWord = question.hanzi;
-        if (!weakWords.includes(wrongWord)) {
-          weakWords.push(wrongWord);
-          saveData();
-          updateStats();
-          renderWordsGrid();
-        }
-
-        allOptions.forEach(item => {
-          if (item.textContent === question.correctAnswer) {
-            item.classList.add("correct");
-          }
-        });
-      }
-
-      quizScore.textContent = String(currentQuizScore);
-
-      setTimeout(() => {
-        currentQuizIndex++;
-        renderQuizQuestion();
-      }, 900);
-    });
-
-    quizOptions.appendChild(btn);
-  });
-}
-
-startQuizBtn.addEventListener("click", () => {
-  currentQuizQuestions = buildQuizQuestions();
-  currentQuizIndex = 0;
-  currentQuizScore = 0;
-  quizScore.textContent = "0";
-  renderQuizQuestion();
-});
-
-function renderWritingModel(modelKey) {
-  const model = WRITING_MODELS[modelKey];
-  if (!model) return;
-
-  writingContainer.innerHTML = "";
-
-  model.forEach((item, index) => {
+  items.forEach((item, index) => {
     const box = document.createElement("div");
-    box.className = "writing-item";
+    box.className = "exam-writing-item";
 
     box.innerHTML = `
-      <div><strong>${index + 1}.</strong> ${item.question}</div>
-      <button class="secondary-btn show-answer-btn" style="margin-top:10px;">إظهار الحل</button>
+      <h3>السؤال ${index + 1}</h3>
+      <p>${item.question}</p>
+      <button class="secondary-btn show-answer-btn">إظهار الحل</button>
       <div class="writing-answer">${item.answer}</div>
     `;
 
-    const showBtn = box.querySelector(".show-answer-btn");
+    const answerBtn = box.querySelector(".show-answer-btn");
     const answerBox = box.querySelector(".writing-answer");
 
-    showBtn.addEventListener("click", () => {
+    answerBtn.addEventListener("click", () => {
       const isVisible = answerBox.style.display === "block";
       answerBox.style.display = isVisible ? "none" : "block";
-      showBtn.textContent = isVisible ? "إظهار الحل" : "إخفاء الحل";
+      answerBtn.textContent = isVisible ? "إظهار الحل" : "إخفاء الحل";
     });
 
-    writingContainer.appendChild(box);
+    examContent.appendChild(box);
   });
 }
 
-writingTabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    writingTabs.forEach(item => item.classList.remove("active"));
-    tab.classList.add("active");
-    renderWritingModel(tab.dataset.model);
+function renderExamContent() {
+  if (currentExamType === "listening") {
+    renderListeningExam(currentExamModel);
+    return;
+  }
+
+  if (currentExamType === "reading") {
+    renderReadingExam(currentExamModel);
+    return;
+  }
+
+  renderWritingExam(currentExamModel);
+}
+
+examTypeButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentExamType = btn.dataset.examType;
+    examTypeButtons.forEach((item) => item.classList.remove("active"));
+    btn.classList.add("active");
+    renderExamContent();
+  });
+});
+
+examModelButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentExamModel = btn.dataset.model;
+    examModelButtons.forEach((item) => item.classList.remove("active"));
+    btn.classList.add("active");
+    renderExamContent();
   });
 });
 
 resetDataBtn.addEventListener("click", () => {
-  const ok = confirm("هل تريد مسح جميع بيانات التقدم؟");
+  const ok = confirm("هل تريد مسح التقدم؟");
   if (!ok) return;
 
   learnedWords.length = 0;
   weakWords.length = 0;
   saveData();
   updateStats();
-  renderWordsGrid();
+  renderWordsList();
+  renderFlashcard();
   alert("تم مسح التقدم");
 });
 
@@ -368,7 +420,7 @@ exportDataBtn.addEventListener("click", async () => {
     await navigator.clipboard.writeText(data);
     alert("تم نسخ البيانات");
   } catch (error) {
-    alert("لم يتم النسخ");
+    alert("فشل النسخ");
   }
 });
 
@@ -383,16 +435,17 @@ importDataBtn.addEventListener("click", () => {
     weakWords.length = 0;
 
     if (Array.isArray(parsed.learnedWords)) {
-      parsed.learnedWords.forEach(item => learnedWords.push(item));
+      parsed.learnedWords.forEach((item) => learnedWords.push(item));
     }
 
     if (Array.isArray(parsed.weakWords)) {
-      parsed.weakWords.forEach(item => weakWords.push(item));
+      parsed.weakWords.forEach((item) => weakWords.push(item));
     }
 
     saveData();
     updateStats();
-    renderWordsGrid();
+    renderWordsList();
+    renderFlashcard();
     alert("تم الاستيراد");
   } catch (error) {
     alert("البيانات غير صحيحة");
@@ -400,6 +453,6 @@ importDataBtn.addEventListener("click", () => {
 });
 
 renderFlashcard();
-renderWordsGrid();
-renderWritingModel("H41001");
+renderWordsList();
+renderExamContent();
 updateStats();
