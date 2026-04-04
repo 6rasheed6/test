@@ -1,1 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HSK 4 Master</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
 
+    <header class="hero">
+      <h1>HSK 4 Master</h1>
+      <p>منصة مذاكرة HSK 4: كلمات، فلاش كارد، كويز، ونماذج كتابة.</p>
+    </header>
+
+    <nav class="nav">
+      <button class="nav-btn active" data-page="dashboard">الرئيسية</button>
+      <button class="nav-btn" data-page="flashcards">فلاش كارد</button>
+      <button class="nav-btn" data-page="words">الكلمات</button>
+      <button class="nav-btn" data-page="quiz">الكويز</button>
+      <button class="nav-btn" data-page="writing">الكتابة</button>
+      <button class="nav-btn" data-page="settings">الإعدادات</button>
+    </nav>
+
+    <main>
+      <section id="dashboard" class="page active">
+        <div class="stats-grid">
+          <div class="card stat-card">
+            <div class="stat-number" id="statTotal">0</div>
+            <div class="stat-label">إجمالي الكلمات</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-number" id="statLearned">0</div>
+            <div class="stat-label">تعلمتها</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-number" id="statRemaining">0</div>
+            <div class="stat-label">المتبقي</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-number" id="statWeak">0</div>
+            <div class="stat-label">الضعيفة</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>التقدم</h2>
+          <p class="muted">كل تقدمك يُحفظ على جهازك.</p>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <p class="muted">النسبة: <span id="progressText">0%</span></p>
+        </div>
+      </section>
+
+      <section id="flashcards" class="page">
+        <div class="card flashcard">
+          <div class="hanzi" id="fcHanzi">爱好</div>
+          <div class="meaning" id="fcMeaning">هواية</div>
+          <div class="pinyin" id="fcPinyin">ài hào</div>
+
+          <div class="flashcard-actions">
+            <button id="togglePinyinBtn">إظهار البينيين</button>
+            <button id="toggleExampleBtn" class="secondary-btn">إظهار المثال</button>
+            <button id="speakBtn" class="secondary-btn">صوت</button>
+            <button id="markLearnedBtn" class="success-btn">تعلمتها</button>
+            <button id="nextWordBtn" class="secondary-btn">التالي</button>
+          </div>
+
+          <div class="example-box" id="fcExample"></div>
+        </div>
+      </section>
+
+      <section id="words" class="page">
+        <div class="card">
+          <h2>لوحة الكلمات</h2>
+
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="ابحث عن كلمة..."
+          />
+
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">الكل</button>
+            <button class="filter-btn" data-filter="learned">تعلمتها</button>
+            <button class="filter-btn" data-filter="unlearned">لم أتعلمها</button>
+            <button class="filter-btn" data-filter="weak">الضعيفة</button>
+          </div>
+
+          <div class="words-grid" id="wordsGrid"></div>
+        </div>
+      </section>
+
+      <section id="quiz" class="page">
+        <div class="card">
+          <h2>الكويز</h2>
+          <p class="muted">اختبر نفسك في معاني الكلمات.</p>
+          <button id="startQuizBtn">ابدأ الكويز</button>
+        </div>
+
+        <div class="card">
+          <div class="quiz-question" id="quizQuestion">اضغط ابدأ الكويز</div>
+          <div id="quizOptions"></div>
+          <p class="muted">النتيجة: <span id="quizScore">0</span></p>
+        </div>
+      </section>
+
+      <section id="writing" class="page">
+        <div class="card">
+          <h2>نماذج الكتابة</h2>
+
+          <div class="writing-tabs">
+            <button class="writing-tab active" data-model="H41001">H41001</button>
+            <button class="writing-tab" data-model="H41002">H41002</button>
+            <button class="writing-tab" data-model="H41003">H41003</button>
+          </div>
+
+          <div id="writingContainer"></div>
+        </div>
+      </section>
+
+      <section id="settings" class="page">
+        <div class="card">
+          <h2>الإعدادات</h2>
+          <p class="muted">إدارة التقدم والبيانات.</p>
+
+          <div class="settings-actions">
+            <button id="resetDataBtn" class="danger-btn">مسح التقدم</button>
+            <button id="exportDataBtn" class="secondary-btn">تصدير البيانات</button>
+            <button id="importDataBtn" class="secondary-btn">استيراد البيانات</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <script src="words.js"></script>
+  <script src="writing.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
