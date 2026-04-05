@@ -6,6 +6,135 @@ let currentExamModel = "H41001";
 const learnedWords = JSON.parse(localStorage.getItem("learnedWords") || "[]");
 const weakWords = JSON.parse(localStorage.getItem("weakWords") || "[]");
 
+const EXAM_LIBRARY = {
+  listening: {
+    H41001: {
+      title: "H41001 Listening",
+      status: "free",
+      duration: "45 سؤال / حوالي 30 دقيقة",
+      sections: "3 أقسام",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41001-listening/"
+    },
+    H41002: {
+      title: "H41002 Listening",
+      status: "free",
+      duration: "45 سؤال / حوالي 30 دقيقة",
+      sections: "3 أقسام",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41002-listening/"
+    },
+    H41003: {
+      title: "H41003 Listening",
+      status: "free",
+      duration: "45 سؤال / حوالي 30 دقيقة",
+      sections: "3 أقسام",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41003-listening/"
+    },
+    H41004: {
+      title: "H41004 Listening",
+      status: "locked",
+      duration: "HSK 4 Listening",
+      sections: "ظاهر في القائمة",
+      source: "Mandarin Bean",
+      url: null
+    },
+    H41005: {
+      title: "H41005 Listening",
+      status: "locked",
+      duration: "HSK 4 Listening",
+      sections: "ظاهر في القائمة",
+      source: "Mandarin Bean",
+      url: null
+    }
+  },
+  reading: {
+    H41001: {
+      title: "H41001 Reading",
+      status: "free",
+      duration: "40 سؤال / حوالي 40 دقيقة",
+      sections: "3 أقسام",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41001-reading/"
+    },
+    H41002: {
+      title: "H41002 Reading",
+      status: "free",
+      duration: "40 سؤال / حوالي 40 دقيقة",
+      sections: "3 أقسام",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41002-reading/"
+    },
+    H41003: {
+      title: "H41003 Reading",
+      status: "free",
+      duration: "40 سؤال / حوالي 40 دقيقة",
+      sections: "3 أقسام",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41003-reading/"
+    },
+    H41004: {
+      title: "H41004 Reading",
+      status: "locked",
+      duration: "HSK 4 Reading",
+      sections: "ظاهر في القائمة",
+      source: "Mandarin Bean",
+      url: null
+    },
+    H41005: {
+      title: "H41005 Reading",
+      status: "locked",
+      duration: "HSK 4 Reading",
+      sections: "ظاهر في القائمة",
+      source: "Mandarin Bean",
+      url: null
+    }
+  },
+  writing: {
+    H41001: {
+      title: "H41001 Writing",
+      status: "free",
+      duration: "15 سؤال / 25 دقيقة",
+      sections: "ترتيب كلمات + صور",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41001-writing/"
+    },
+    H41002: {
+      title: "H41002 Writing",
+      status: "free",
+      duration: "15 سؤال / 25 دقيقة",
+      sections: "ترتيب كلمات + صور",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41002-writing/"
+    },
+    H41003: {
+      title: "H41003 Writing",
+      status: "free",
+      duration: "15 سؤال / 25 دقيقة",
+      sections: "ترتيب كلمات + صور",
+      source: "Mandarin Bean",
+      url: "https://mandarinbean.com/h41003-writing/"
+    },
+    H41004: {
+      title: "H41004 Writing",
+      status: "locked",
+      duration: "HSK 4 Writing",
+      sections: "ظاهر في القائمة",
+      source: "Mandarin Bean",
+      url: null
+    },
+    H41005: {
+      title: "H41005 Writing",
+      status: "locked",
+      duration: "HSK 4 Writing",
+      sections: "ظاهر في القائمة",
+      source: "Mandarin Bean",
+      url: null
+    }
+  }
+};
+
 const pages = document.querySelectorAll(".page");
 const navButtons = document.querySelectorAll(".nav-btn");
 const filterButtons = document.querySelectorAll(".filter-btn");
@@ -302,28 +431,97 @@ filterButtons.forEach((btn) => {
 
 searchInput.addEventListener("input", renderWordsList);
 
-function renderListeningExam(model) {
-  examContent.innerHTML = `
-    <div class="exam-placeholder">
-      <h3>${model} - Listening</h3>
-      <p>
-        ضع هنا لاحقًا روابط ملفات الاستماع وأسئلة كل نموذج.
-        الصفحة الآن مهيأة ومقسمة بشكل صحيح للاستماع.
-      </p>
-    </div>
-  `;
-}
+function renderExamCards(examType) {
+  const library = EXAM_LIBRARY[examType];
+  const models = ["H41001", "H41002", "H41003", "H41004", "H41005"];
 
-function renderReadingExam(model) {
   examContent.innerHTML = `
-    <div class="exam-placeholder">
-      <h3>${model} - Reading</h3>
-      <p>
-        ضع هنا لاحقًا أسئلة القراءة الكاملة لكل نموذج.
-        الصفحة الآن مهيأة ومقسمة بشكل صحيح للقراءة.
-      </p>
+    <div class="exam-note-box">
+      ${
+        examType === "listening"
+          ? "قسم الاستماع مرتب هنا كنماذج خارجية جاهزة. اضغط فتح النموذج إذا كان متاحًا."
+          : examType === "reading"
+          ? "قسم القراءة مرتب هنا كنماذج خارجية جاهزة. اضغط فتح النموذج إذا كان متاحًا."
+          : "قسم الكتابة يجمع النماذج المتاحة علنًا مع إمكانية عرض الحل داخل الموقع للنماذج المدعومة."
+      }
     </div>
+    <div class="exam-cards-grid" id="dynamicExamCards"></div>
   `;
+
+  const grid = document.getElementById("dynamicExamCards");
+
+  models.forEach((model) => {
+    const item = library[model];
+    const card = document.createElement("div");
+    card.className = "exam-card" + (item.status === "locked" ? " locked" : "");
+
+    const badgeClass = item.status === "locked" ? "exam-badge locked" : "exam-badge";
+    const badgeText = item.status === "locked" ? "غير متاح مجانًا" : "متاح";
+
+    let actions = "";
+
+    if (item.url) {
+      actions += `
+        <a class="primary-btn" href="${item.url}" target="_blank" rel="noopener noreferrer">فتح النموذج</a>
+      `;
+    }
+
+    if (examType === "writing" && WRITING_MODELS[model]) {
+      actions += `
+        <button class="secondary-btn open-local-writing-btn" data-model="${model}">عرض الحل داخل الموقع</button>
+      `;
+    }
+
+    if (!actions) {
+      actions = `
+        <button class="secondary-btn" disabled>غير متاح الآن</button>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="exam-card-top">
+        <h3>${item.title}</h3>
+        <span class="${badgeClass}">${badgeText}</span>
+      </div>
+
+      <div class="exam-meta">
+        <span>${item.duration}</span>
+        <span>${item.sections}</span>
+        <span>${item.source}</span>
+      </div>
+
+      <p class="muted">
+        ${
+          item.status === "locked"
+            ? "هذا النموذج ظاهر في قائمة HSK 4 لكنه ليس مفتوحًا هنا في النسخة المجانية."
+            : "هذا النموذج متاح علنًا، ويمكنك فتحه مباشرة من المصدر."
+        }
+      </p>
+
+      <div class="exam-actions">
+        ${actions}
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+
+  document.querySelectorAll(".open-local-writing-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentExamType = "writing";
+      currentExamModel = btn.dataset.model;
+
+      examTypeButtons.forEach((item) => {
+        item.classList.toggle("active", item.dataset.examType === "writing");
+      });
+
+      examModelButtons.forEach((item) => {
+        item.classList.toggle("active", item.dataset.model === currentExamModel);
+      });
+
+      renderWritingExam(currentExamModel);
+    });
+  });
 }
 
 function renderWritingExam(model) {
@@ -333,13 +531,17 @@ function renderWritingExam(model) {
     examContent.innerHTML = `
       <div class="exam-placeholder">
         <h3>${model} - Writing</h3>
-        <p>هذا النموذج غير مضاف بعد في الملف الحالي.</p>
+        <p>هذا النموذج غير مضاف محليًا بعد.</p>
       </div>
     `;
     return;
   }
 
-  examContent.innerHTML = "";
+  examContent.innerHTML = `
+    <div class="exam-note-box">
+      هذا العرض الداخلي يركز على مراجعة قسم الكتابة بسرعة، ويمكنك أيضًا فتح المصدر الأصلي من تبويب Writing إذا كان متاحًا.
+    </div>
+  `;
 
   items.forEach((item, index) => {
     const box = document.createElement("div");
@@ -366,17 +568,12 @@ function renderWritingExam(model) {
 }
 
 function renderExamContent() {
-  if (currentExamType === "listening") {
-    renderListeningExam(currentExamModel);
+  if (currentExamType === "writing" && WRITING_MODELS[currentExamModel]) {
+    renderExamCards("writing");
     return;
   }
 
-  if (currentExamType === "reading") {
-    renderReadingExam(currentExamModel);
-    return;
-  }
-
-  renderWritingExam(currentExamModel);
+  renderExamCards(currentExamType);
 }
 
 examTypeButtons.forEach((btn) => {
@@ -393,7 +590,12 @@ examModelButtons.forEach((btn) => {
     currentExamModel = btn.dataset.model;
     examModelButtons.forEach((item) => item.classList.remove("active"));
     btn.classList.add("active");
-    renderExamContent();
+
+    if (currentExamType === "writing" && WRITING_MODELS[currentExamModel]) {
+      renderWritingExam(currentExamModel);
+    } else {
+      renderExamContent();
+    }
   });
 });
 
