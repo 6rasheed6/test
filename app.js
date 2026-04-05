@@ -653,8 +653,17 @@ importDataBtn.addEventListener("click", () => {
     alert("البيانات غير صحيحة");
   }
 });
+async function initApp() {
+  try {
+    await loadAllWords();
+  } catch (error) {
+    alert("فشل تحميل جميع كلمات HSK 4");
+  }
 
-renderFlashcard();
-renderWordsList();
-renderExamContent();
-updateStats();
+  renderFlashcard();
+  renderWordsList();
+  renderExamContent();
+  updateStats();
+}
+
+initApp();
